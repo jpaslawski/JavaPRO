@@ -18,6 +18,7 @@ public class SignInLayout {
 
         signInBox.setPadding(new Insets(20, 20, 20, 20));
         signInBox.setSpacing(10);
+        signInBox.setAlignment(Pos.CENTER);
 
         sceneLabel.setMaxWidth(Double.MAX_VALUE);
         sceneLabel.setStyle("-fx-font-size: 20px;-fx-font-weight: bold;");
@@ -25,15 +26,22 @@ public class SignInLayout {
         AnchorPane.setRightAnchor(sceneLabel, 0.0);
         sceneLabel.setAlignment(Pos.CENTER);
 
-        emailField.setPromptText("Type the email associated with your account...");
-        passwordField.setPromptText("Type your password...");
+        VBox fieldContainer = new VBox();
+        fieldContainer.setSpacing(10);
+        fieldContainer.setStyle("-fx-padding: 0 0 0 300px");
 
-        singInBtn.setMaxWidth(Double.MAX_VALUE);
+        emailField.setPromptText("Type the email associated with your account...");
+        emailField.setMaxWidth(500);
+        passwordField.setPromptText("Type your password...");
+        passwordField.setMaxWidth(500);
+
+        fieldContainer.getChildren().addAll(emailLabel, emailField, passwordLabel, passwordField);
+
+        singInBtn.setPrefWidth(200);
         AnchorPane.setLeftAnchor(singInBtn, 0.0);
         AnchorPane.setRightAnchor(singInBtn, 0.0);
-        singInBtn.setAlignment(Pos.CENTER);
 
-        signInBox.getChildren().addAll(sceneLabel, emailLabel, emailField, passwordLabel, passwordField, errorLabel, singInBtn, linkToSignUp);
+        signInBox.getChildren().addAll(sceneLabel, fieldContainer, errorLabel, singInBtn, linkToSignUp);
 
         return signInBox;
     }

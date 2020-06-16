@@ -15,19 +15,19 @@ public class SignUpLayout {
             passwordLabel = new Label("Password"),
             passwordConfirmLabel = new Label("Confirm Password"),
             sceneLabel = new Label("Sign Up");
-    private VBox signUpBox;
 
     public VBox loadSignUpLayout(TextField firstNameField,
                                  TextField lastNameField,
                                  TextField emailField,
                                  PasswordField passwordField,
                                  PasswordField passwordConfirmField,
-                                 Button singInBtn,
+                                 Button singUpBtn,
                                  Hyperlink linkToSignUp,
                                  Label errorLabel) {
-        signUpBox = new VBox();
+        VBox signUpBox = new VBox();
         signUpBox.setPadding(new Insets(20, 20, 20, 20));
         signUpBox.setSpacing(10);
+        signUpBox.setAlignment(Pos.CENTER);
 
         sceneLabel.setMaxWidth(Double.MAX_VALUE);
         sceneLabel.setStyle("-fx-font-size: 20px;-fx-font-weight: bold;");
@@ -35,19 +35,33 @@ public class SignUpLayout {
         AnchorPane.setRightAnchor(sceneLabel, 0.0);
         sceneLabel.setAlignment(Pos.CENTER);
 
+        VBox fieldContainer = new VBox();
+        fieldContainer.setSpacing(10);
+        fieldContainer.setStyle("-fx-padding: 0 0 0 300px");
+
         firstNameField.setPromptText("Type your first name...");
+        firstNameField.setMaxWidth(500);
+
         lastNameField.setPromptText("Type your last name...");
+        lastNameField.setMaxWidth(500);
+
         emailField.setPromptText("Type the email associated with your account...");
+        emailField.setMaxWidth(500);
+
         passwordField.setPromptText("Type your password...");
+        passwordField.setMaxWidth(500);
+
         passwordConfirmField.setPromptText("Confirm your password...");
+        passwordConfirmField.setMaxWidth(500);
 
-        singInBtn.setMaxWidth(Double.MAX_VALUE);
-        AnchorPane.setLeftAnchor(singInBtn, 0.0);
-        AnchorPane.setRightAnchor(singInBtn, 0.0);
-        singInBtn.setAlignment(Pos.CENTER);
+        fieldContainer.getChildren().addAll(firstNameLabel, firstNameField, lastNameLabel,  lastNameField, emailLabel, emailField, passwordLabel, passwordField, passwordConfirmLabel, passwordConfirmField);
 
-        signUpBox.getChildren().addAll(firstNameLabel, firstNameField,lastNameLabel, lastNameField, emailLabel, emailField, passwordLabel,
-                passwordField, passwordConfirmLabel, passwordConfirmField, errorLabel, singInBtn, linkToSignUp);
+
+        singUpBtn.setPrefWidth(200);
+        AnchorPane.setLeftAnchor(singUpBtn, 0.0);
+        AnchorPane.setRightAnchor(singUpBtn, 0.0);
+
+        signUpBox.getChildren().addAll(fieldContainer, errorLabel, singUpBtn, linkToSignUp);
 
         return signUpBox;
     }

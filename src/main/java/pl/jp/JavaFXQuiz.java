@@ -1,8 +1,10 @@
 package pl.jp;
 
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -15,10 +17,15 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import pl.jp.models.*;
@@ -126,6 +133,29 @@ public class JavaFXQuiz extends Application {
     private Label percentageLabel;
     private VBox singleResultBox;
 
+    /** Lecture List Layout objects **/
+    private Label lectureListLabel = new Label("Lecture List:");
+    private Lecture currentLecture;
+    private int currentSlide;
+    private ImageView slide = new ImageView();
+    private Button firstBtn, previousBtn, nextBtn, lastBtn, autoBtn;
+    private boolean timerRunning = false, timerDestroy = false;
+    private Timer timer;
+    private TimerTask task;
+    private VBox lectureListBox, slideViewerBox;
+
+    /** Code Viewer Layout objects **/
+    private TextArea code = new TextArea();
+    private TreeView<String> treeView;
+    private Label codeLabel;
+    private VBox treeViewBox, codeViewerBox;
+
+    /** Tools Layout objects **/
+    private TreeView<String> toolsTree;
+    private WebView webView;
+    private WebEngine webEngine;
+    private VBox toolsTreeBox, webBrowserBox;
+
     private ReadJsonFile reader = new ReadJsonFile();
     private BorderPane root;
     private Label footer;
@@ -133,7 +163,7 @@ public class JavaFXQuiz extends Application {
     private User loggedInUser;
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) throws Exception {
         root = new BorderPane();
 
         menuBar = new MenuBar();
@@ -148,42 +178,85 @@ public class JavaFXQuiz extends Application {
 
         quiz.getItems().addAll(showQuiz, addQuiz, addQuestion);
 
+        Menu slideViewer = new Menu("Slide Viewer");
+        MenuItem showLectureList = new MenuItem("Lecture List");
+        slideViewer.getItems().addAll(showLectureList);
+
+        Menu codeViewer = new Menu("Code Viewer");
+        MenuItem showProjects = new MenuItem("Show projects");
+        codeViewer.getItems().add(showProjects);
+
+        Menu tools = new Menu("Tools");
+        MenuItem showTools = new MenuItem("Show tools");
+        tools.getItems().add(showTools);
+
         Menu profile = new Menu("Profile");
         MenuItem userResults = new MenuItem("Your results");
         MenuItem logout = new MenuItem("Logout");
 
         profile.getItems().addAll(userResults, logout);
 
-        menuBar.getMenus().addAll(quiz, profile);
-        studentMenuBar.getMenus().addAll(studentMenuQuiz, profile);
+        menuBar.getMenus().addAll(quiz, slideViewer, codeViewer, tools, profile);
+        studentMenuBar.getMenus().addAll(studentMenuQuiz, slideViewer, codeViewer, tools, profile);
 
+        // Quiz action listeners
         showQuiz.setOnAction(e -> {
+            resetViews();
             loadAllQuizzesScene();
             root.setCenter(allQuizzesBox);
         });
 
         addQuiz.setOnAction(e -> {
+            resetViews();
             loadNewQuizFormScene();
             root.setCenter(newQuizBox);
         });
 
         addQuestion.setOnAction(e -> {
+            resetViews();
             loadNewQuestionFormScene();
             root.setCenter(questionFormBox);
         });
 
+        // Slide Viewer action listeners
+        showLectureList.setOnAction(e -> {
+            resetViews();
+            loadLectureListScene();
+            root.setCenter(slideViewerBox);
+            root.setRight(lectureListBox);
+        });
+
+        // Code Viewer action listeners
+        showProjects.setOnAction(e -> {
+            resetViews();
+            loadCodeViewerScene();
+            root.setLeft(treeViewBox);
+            root.setCenter(codeViewerBox);
+        });
+
+        // Tools action listeners
+        showTools.setOnAction(e -> {
+            resetViews();
+            loadToolsScene();
+            root.setLeft(toolsTreeBox);
+            root.setCenter(webBrowserBox);
+        });
+
+        // Profile action listeners
         userResults.setOnAction(e -> {
+            resetViews();
             loadResultsScene();
             root.setCenter(userResultsBox);
         });
 
         logout.setOnAction(e -> {
+            resetViews();
             signIn();
             root.setTop(null);
             root.setCenter(signInBox);
         });
 
-        footer = new Label("JavaFX Quiz Application, © Copyright 2020 Jerzy Pasławski");
+        footer = new Label("JavaPRO Application, © Copyright 2020 Jerzy Pasławski");
         footer.setMaxWidth(Double.MAX_VALUE);
         AnchorPane.setLeftAnchor(footer, 0.0);
         AnchorPane.setRightAnchor(footer, 0.0);
@@ -195,8 +268,8 @@ public class JavaFXQuiz extends Application {
         signIn();
         root.setCenter(signInBox);
 
-        Scene scene = new Scene(root, 500, 500);
-        primaryStage.setTitle("JavaPRO - Quiz");
+        Scene scene = new Scene(root, 1100, 700);
+        primaryStage.setTitle("JavaPRO");
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
@@ -498,6 +571,14 @@ public class JavaFXQuiz extends Application {
         });
     }
 
+    public void resetViews() {
+        root.setCenter(null);
+        root.setLeft(null);
+        root.setRight(null);
+
+        stopTimer();
+    }
+
     public void loadQuestionToQuizScene(Question question) {
         errorLabel.setText("");
         questionToQuizBox = new VBox();
@@ -751,5 +832,282 @@ public class JavaFXQuiz extends Application {
         });
 
         singleResultBox.getChildren().addAll(percentageLabel, scrollPane, returnBack);
+    }
+
+    public void loadLectureListScene() {
+        lectureListBox = new VBox();
+        lectureListBox.setPadding(new Insets(20, 20, 20, 20));
+        lectureListBox.setSpacing(10);
+
+        lectureListBox.getChildren().add(lectureListLabel);
+
+        List<Lecture> lectureList = reader.getLectureList();
+        for(Lecture lecture:lectureList) {
+            Button btn = new Button(lecture.getName());
+            btn.setOnAction(e -> {
+                currentLecture = lecture;
+                currentSlide = 0;
+                stopTimer();
+                autoBtn.setText("Auto");
+                showSlides();
+            });
+            lectureListBox.getChildren().add(btn);
+        }
+
+        slideViewerBox = new VBox();
+        slideViewerBox.setPadding(new Insets(20, 20, 20, 20));
+        slideViewerBox.setSpacing(10);
+        slideViewerBox.setAlignment(Pos.CENTER);
+
+        slide = new ImageView();
+        slide.setFitWidth(500);
+        slide.setFitHeight(300);
+
+        HBox buttonBox = new HBox();
+        buttonBox.setAlignment(Pos.CENTER);
+
+        firstBtn = new Button("<<");
+        previousBtn = new Button("<");
+        nextBtn = new Button(">");
+        lastBtn = new Button(">>");
+        autoBtn = new Button("Auto");
+
+        firstBtn.setDisable(true);
+        previousBtn.setDisable(true);
+        nextBtn.setDisable(true);
+        lastBtn.setDisable(true);
+        autoBtn.setDisable(true);
+
+        buttonBox.getChildren().addAll(firstBtn, previousBtn, nextBtn, lastBtn, autoBtn);
+
+        slideViewerBox.getChildren().addAll(slide, buttonBox);
+    }
+
+    public void showFirstSlide() {
+        currentSlide = 0;
+
+        String folderName = currentLecture.getName().toLowerCase();
+        String slideName = currentLecture.getSlideNames()[currentSlide];
+
+        slide.setImage(new ReadJsonFile().getSlide(folderName, slideName));
+    }
+
+    public void showNextSlide() {
+        if (currentSlide < currentLecture.getSlideAmount() - 1) {
+            currentSlide++;
+        } else {
+            currentSlide = 0;
+        }
+
+        String folderName = currentLecture.getName().toLowerCase();
+        String slideName = currentLecture.getSlideNames()[currentSlide];
+
+        slide.setImage(new ReadJsonFile().getSlide(folderName, slideName));
+    }
+
+    public void showPreviousSlide() {
+        if (currentSlide != 0) {
+            currentSlide--;
+        } else {
+            currentSlide = currentLecture.getSlideAmount() - 1;
+        }
+
+        String folderName = currentLecture.getName().toLowerCase();
+        String slideName = currentLecture.getSlideNames()[currentSlide];
+
+        slide.setImage(new ReadJsonFile().getSlide(folderName, slideName));
+    }
+
+    public void showLastSlide() {
+        currentSlide = currentLecture.getSlideAmount() - 1;
+
+        String folderName = currentLecture.getName().toLowerCase();
+        String slideName = currentLecture.getSlideNames()[currentSlide];
+
+        slide.setImage(new ReadJsonFile().getSlide(folderName, slideName));
+    }
+
+    public void startTimer() {
+        timer = new Timer();
+        task = new TimerTask() {
+            @Override
+            public void run() {
+                showNextSlide();
+            }
+        };
+        timerRunning = true;
+        timerDestroy = true;
+        timer.schedule(task, 2000, 2000);
+    }
+
+    public void stopTimer() {
+        if(timerRunning || timerDestroy) {
+            timer.cancel();
+        }
+        timerRunning = false;
+        timerDestroy = false;
+    }
+
+    public void showSlides() {
+        String[] slideList = currentLecture.getSlideNames();
+
+        firstBtn.setDisable(false);
+        previousBtn.setDisable(false);
+        nextBtn.setDisable(false);
+        lastBtn.setDisable(false);
+        autoBtn.setDisable(false);
+
+        firstBtn.setOnAction(e -> {
+            showFirstSlide();
+        });
+
+        previousBtn.setOnAction(e -> {
+            showPreviousSlide();
+        });
+
+        nextBtn.setOnAction(e -> {
+            showNextSlide();
+        });
+
+        lastBtn.setOnAction(e -> {
+            showLastSlide();
+        });
+
+        autoBtn.setOnAction(e -> {
+            timerRunning = !timerRunning;
+            if (timerRunning) {
+                autoBtn.setText("Stop");
+
+                firstBtn.setDisable(true);
+                previousBtn.setDisable(true);
+                nextBtn.setDisable(true);
+                lastBtn.setDisable(true);
+
+                startTimer();
+            } else {
+                autoBtn.setText("Auto");
+
+                firstBtn.setDisable(false);
+                previousBtn.setDisable(false);
+                nextBtn.setDisable(false);
+                lastBtn.setDisable(false);
+
+                stopTimer();
+            }
+        });
+
+        slide.setImage(new ReadJsonFile().getSlide(currentLecture.getName().toLowerCase(), slideList[currentSlide]));
+    }
+
+    private void handleMouseClickedCode(MouseEvent event) {
+        Node node = event.getPickResult().getIntersectedNode();
+        if (node instanceof Text || (node instanceof TreeCell && ((TreeCell) node).getText() != null)) {
+            String codeName = (String) ((TreeItem)treeView.getSelectionModel().getSelectedItem()).getValue();
+            if(codeName.contains("java")) {
+                String projectName = (String) ((TreeItem)treeView.getSelectionModel().getSelectedItem()).getParent().getValue();
+                codeLabel.setText(codeName);
+                try {
+                    BufferedReader reader = new BufferedReader(new FileReader("files/" + projectName + "/" + codeName));
+                    String line = reader.readLine();
+                    String text = line + System.lineSeparator();
+                    while (line != null) {
+                        line = reader.readLine();
+                        if (line != null) {
+                            text += line + System.lineSeparator();
+                        }
+                    }
+                    code.setText(text);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void loadCodeViewerScene() {
+        treeViewBox = new VBox();
+
+        treeView = new TreeView<>();
+        EventHandler<MouseEvent> mouseEventHandle = this::handleMouseClickedCode;
+        treeView.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventHandle);
+
+        TreeItem<String> projects = new TreeItem<>("Projects");
+
+        List<Project> projectList = new ReadJsonFile().getProjectList();
+        for(Project project : projectList) {
+            TreeItem<String> rootItem = new TreeItem<>(project.getName());
+            String[] codeList = project.getCodeList();
+            for (String codeName : codeList) {
+                TreeItem<String> projectItem =  new TreeItem<>(codeName);
+                rootItem.getChildren().add(projectItem);
+            }
+            projects.getChildren().add(rootItem);
+        }
+        treeView.setRoot(projects);
+        treeViewBox.getChildren().add(treeView);
+
+        codeViewerBox = new VBox();
+        codeViewerBox.setAlignment(Pos.CENTER);
+
+        codeLabel = new Label("");
+        code = new TextArea();
+        code.setPrefSize(500, 500);
+        code.setEditable(false);
+
+        codeViewerBox.getChildren().addAll(codeLabel, code);
+    }
+
+    private void handleMouseClickedTools(MouseEvent event) {
+        Node node = event.getPickResult().getIntersectedNode();
+        if (node instanceof Text || (node instanceof TreeCell && ((TreeCell) node).getText() != null)) {
+            String toolName = (String) ((TreeItem)toolsTree.getSelectionModel().getSelectedItem()).getValue();
+            getLink(toolName);
+        }
+    }
+
+    private void getLink(String toolName) {
+        List<JavaTools> toolsList = new ReadJsonFile().getToolsList();
+        for(JavaTools tool : toolsList) {
+            String[] pageNames = tool.getPageName();
+            String[] links = tool.getLinks();
+
+            for (int i = 0; i < links.length; i++) {
+                if(pageNames[i].equals(toolName)) {
+                    webEngine.load(links[i]);
+                }
+            }
+        }
+    }
+
+    private void loadToolsScene() {
+        toolsTreeBox = new VBox();
+
+        toolsTree = new TreeView<>();
+        EventHandler<MouseEvent> mouseEventHandle = this::handleMouseClickedTools;
+        toolsTree.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventHandle);
+
+        TreeItem<String> tools = new TreeItem<>("Tools");
+
+        List<JavaTools> toolsList = new ReadJsonFile().getToolsList();
+        for(JavaTools tool : toolsList) {
+            TreeItem<String> rootItem = new TreeItem<>(tool.getCategoryName());
+            String[] pageNames = tool.getPageName();
+            String[] links = tool.getLinks();
+
+            for (int i = 0; i < links.length; i++) {
+                TreeItem<String> item =  new TreeItem<>(pageNames[i]);
+                rootItem.getChildren().add(item);
+            }
+            tools.getChildren().add(rootItem);
+        }
+        toolsTree.setRoot(tools);
+        toolsTreeBox.getChildren().add(toolsTree);
+
+        webBrowserBox = new VBox();
+        webView = new WebView();
+        webEngine = webView.getEngine();
+        webEngine.load("https://www.google.com/");
+        webBrowserBox.getChildren().add(webView);
+
     }
 }

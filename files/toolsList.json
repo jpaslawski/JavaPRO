@@ -1,0 +1,3 @@
+[{"categoryName":"Java Tools", "pageName":["JDK","JavaFX","IntelliJ","Netbeans"], "links":["https://www.java.com/pl/download/faq/jdk9_plugin.xml","https://openjfx.io/","https://www.jetbrains.com/idea/","https://netbeans.org/"]},
+{"categoryName":"Java API", "pageName":["Java SE","Java EE","Java Android"], "links":["https://www.oracle.com/pl/java/technologies/javase-downloads.html","https://www.oracle.com/java/technologies/java-ee-glance.html","https://developer.android.com/studio"]},
+{"categoryName":"Tutorials", "pageName":["Android Course", "Spring Course"], "links":["https://www.youtube.com/watch?v=roDz8mMvbIg&list=PLknSwrodgQ72X4sKpzf5vT8kY80HKcUSe","https://www.youtube.com/watch?v=MHoFSfXGX_A&list=PLw_k9CF7hBpJJsRWAhwSrDlWAzuMV0irl"]}]

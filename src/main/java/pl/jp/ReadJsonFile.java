@@ -2,10 +2,8 @@ package pl.jp;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import pl.jp.models.Question;
-import pl.jp.models.Quiz;
-import pl.jp.models.QuizResult;
-import pl.jp.models.User;
+import javafx.scene.image.Image;
+import pl.jp.models.*;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -19,6 +17,9 @@ public class ReadJsonFile {
     private List<Question> questions;
     private List<Quiz> quizzes;
     private List<QuizResult> quizResults;
+    private List<Lecture> lectureList;
+    private List<Project> projectList;
+    private List<JavaTools> toolsList;
 
     public List<User> getUsers() {
         try {
@@ -160,5 +161,51 @@ public class ReadJsonFile {
                 System.err.println("Unable to save results!");
             }
         }
+    }
+
+    public List<Lecture> getLectureList() {
+        try {
+            FileReader inputReader = new FileReader("files/lectureList.json");
+            Type listType = new TypeToken<ArrayList<Lecture>>(){}.getType();
+            lectureList = new Gson().fromJson(inputReader, listType);
+
+            inputReader.close();
+        }
+        catch (FileNotFoundException e) { System.err.println("File does not exist"); }
+        catch (IOException e) {  System.err.println("An error occurred while reading to the file."); }
+
+        return lectureList;
+    }
+
+    public Image getSlide(String folderName, String slideName) {
+        return new Image(new File("files/" + folderName + "/" + slideName).toURI().toString());
+    }
+
+    public List<Project> getProjectList() {
+        try {
+            FileReader inputReader = new FileReader("files/codeList.json");
+            Type listType = new TypeToken<ArrayList<Project>>(){}.getType();
+            projectList = new Gson().fromJson(inputReader, listType);
+
+            inputReader.close();
+        }
+        catch (FileNotFoundException e) { System.err.println("File does not exist"); }
+        catch (IOException e) {  System.err.println("An error occurred while reading to the file."); }
+
+        return projectList;
+    }
+
+    public List<JavaTools> getToolsList() {
+        try {
+            FileReader inputReader = new FileReader("files/toolsList.json");
+            Type listType = new TypeToken<ArrayList<JavaTools>>(){}.getType();
+            toolsList = new Gson().fromJson(inputReader, listType);
+
+            inputReader.close();
+        }
+        catch (FileNotFoundException e) { System.err.println("File does not exist"); }
+        catch (IOException e) {  System.err.println("An error occurred while reading to the file."); }
+
+        return toolsList;
     }
 }
