@@ -17,7 +17,7 @@ Each user can view the loaded projects. Projects contain source codes.
 This component consists of several categories of Java Tools, Tutorials and Documentation links which are opened in a built-in Web Browser.
 
 ### Account Management
-Each user has his own private account which grants him access to specified resources (roles: student and admin). The App enables users to create an account or sign in, if they already created an account.
+Each user has his own private account which grants him access to specified resources (roles: student and admin). The App enables users to create an account or sign in, if they already have an account.
 
 ### Content format
-All the contents of the App are stored in JSON files, so in the future it could get all the data from an API (this feature would be ready to implement thanks to the ReadJSONFile file).
+All the contents of the App are stored in JSON files, so in the future it could get all the data from an API (this feature would be ready to implement thanks to the ReadJSONFile class).
